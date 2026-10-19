@@ -96,12 +96,15 @@ send multipart uploads, so use **`curl.exe`**, which ships with Windows 10/11. W
 `curl.exe`, not `curl`, because `curl` is an alias for something else in Windows PowerShell.
 
 ```powershell
+$ErrorActionPreference = "Stop"
+
 # 1. Submit a batch (repeat -F for each file; scale = 2 or 4)
 $job = curl.exe -s -F "scale=4" -F "files=@C:\pics\cat.jpg" -F "files=@C:\pics\dog.png" http://localhost:8000/api/jobs | ConvertFrom-Json
+if (-not $job.id) { throw "Upload failed: $($job.detail)" }
 
 # 2. Poll until done
 do { Start-Sleep 2; $job = Invoke-RestMethod "http://localhost:8000/api/jobs/$($job.id)" } while ($job.status -ne "done")
-$job.files | Format-Table name, status, output_width, output_height, error
+$job.files | Select-Object name, status, output_name, output_width, output_height, error | ConvertTo-Json
 
 # 3a. Download everything as one ZIP
 Invoke-WebRequest "http://localhost:8000/api/jobs/$($job.id)/zip" -OutFile C:\pics\upscaled.zip
