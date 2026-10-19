@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "image-upscaler": {
+      "command": "backend/.venv/bin/python",
+      "args": ["backend/scripts/mcp_server.py"],
+      "env": {
+        "UPSCALER_API_URL": "http://localhost:8000"
+      }
+    }
+  }
+}

@@ -43,6 +43,48 @@ For production, `npm run build` produces static files in `frontend/dist/`.
 Serve them from any static host and set `VITE_API_URL` at build time if the
 API is on another origin (also add that origin to the backend's `CORS_ORIGINS`).
 
+## Use from an AI agent (MCP)
+
+`backend/agent/` contains an [MCP](https://modelcontextprotocol.io) server, so
+agents such as Claude Code and Claude Desktop can upscale local files. It sends
+the images to the REST API and saves the results back to disk, so **the
+backend must be running** (`uvicorn app.main:app --port 8000`, see above).
+
+**Claude Code:** the repo ships a `.mcp.json`, so starting `claude` in the
+repo root offers the `image-upscaler` server (approve it once). To use it from
+any directory, register it globally:
+
+```bash
+claude mcp add image-upscaler --scope user \
+  -- /absolute/path/to/image-upscaler/backend/.venv/bin/python \
+     /absolute/path/to/image-upscaler/backend/scripts/mcp_server.py
+```
+
+**Claude Desktop:** add this to `claude_desktop_config.json`
+(Settings → Developer → Edit Config), then restart Claude Desktop.
+On Windows the Python path is `backend\\.venv\\Scripts\\python.exe`.
+
+```json
+{
+  "mcpServers": {
+    "image-upscaler": {
+      "command": "/absolute/path/to/image-upscaler/backend/.venv/bin/python",
+      "args": ["/absolute/path/to/image-upscaler/backend/scripts/mcp_server.py"],
+      "env": { "UPSCALER_API_URL": "http://localhost:8000" }
+    }
+  }
+}
+```
+
+Then just ask, for example: *"Upscale ~/Pictures/cat.jpg and ~/Pictures/dog.png to 400%"*.
+
+| Tool | What it does |
+|---|---|
+| `upscale_images(paths, scale=2, output_dir?, overwrite=false, timeout_seconds=600)` | Uploads local images (absolute paths), waits while reporting progress, and saves `<name>_2x.<ext>` / `<name>_4x.<ext>` next to each input or in `output_dir`. Never overwrites existing files unless `overwrite` is true. If the timeout is reached, it returns the `job_id` |
+| `get_job_status(job_id)` | Progress and per-file status of a job |
+| `download_results(job_id, output_dir)` | Saves a job's finished images, e.g. after a timeout |
+| `upscaler_info()` | Whether the API is up, which model is loaded, upload limits |
+
 ## API
 
 | Method & path | Purpose |
