@@ -9,6 +9,7 @@ from pathlib import Path
 from fastapi import FastAPI, File, Form, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 from PIL import Image, UnidentifiedImageError
 from starlette.concurrency import run_in_threadpool
 
@@ -21,7 +22,11 @@ logging.basicConfig(level=logging.INFO)
 MEDIA_TYPES = {"JPEG": "image/jpeg", "PNG": "image/png", "WEBP": "image/webp"}
 
 
-def create_app(upscaler: Upscaler | None = None, storage_dir: Path = config.STORAGE_DIR) -> FastAPI:
+def create_app(
+    upscaler: Upscaler | None = None,
+    storage_dir: Path = config.STORAGE_DIR,
+    frontend_dist: Path = config.FRONTEND_DIST,
+) -> FastAPI:
     @asynccontextmanager
     async def lifespan(app: FastAPI):
         manager = JobManager(upscaler or await run_in_threadpool(load_upscaler), storage_dir)
@@ -128,6 +133,10 @@ def create_app(upscaler: Upscaler | None = None, storage_dir: Path = config.STOR
                 used.add(name)
                 archive.write(item.output_path, name)
         return FileResponse(path, media_type="application/zip", filename=f"upscaled_{job.scale}x.zip")
+
+    # Mounted last so it never shadows the /api routes.
+    if (frontend_dist / "index.html").exists():
+        app.mount("/", StaticFiles(directory=frontend_dist, html=True), name="frontend")
 
     return app
 

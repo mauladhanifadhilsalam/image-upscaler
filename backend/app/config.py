@@ -5,6 +5,8 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 MODELS_DIR = Path(os.getenv("MODELS_DIR", BASE_DIR / "models"))
 STORAGE_DIR = Path(os.getenv("STORAGE_DIR", BASE_DIR / "storage"))
+# Built web UI (`npm run build`); served at / when present.
+FRONTEND_DIST = Path(os.getenv("FRONTEND_DIST", BASE_DIR.parent / "frontend" / "dist"))
 
 MODEL_FILES = {
     2: "RealESRGAN_x2plus.pth",

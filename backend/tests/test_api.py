@@ -105,3 +105,17 @@ def test_cleanup_removes_expired_jobs(client):
     assert manager.cleanup_expired(now=time.time() + config.JOB_TTL_SECONDS + 1) == 1
     assert not job_dir.exists()
     assert client.get(f"/api/jobs/{job_id}").status_code == 404
+
+
+def test_serves_built_frontend(tmp_path):
+    dist = tmp_path / "dist"
+    dist.mkdir()
+    (dist / "index.html").write_text("<h1>upscaler</h1>")
+    with TestClient(create_app(ResizeUpscaler(), tmp_path / "storage", dist)) as c:
+        assert "upscaler" in c.get("/").text
+        assert c.get("/api/health").json()["status"] == "ok"
+
+
+def test_no_frontend_without_dist(tmp_path):
+    with TestClient(create_app(ResizeUpscaler(), tmp_path / "storage", tmp_path / "missing")) as c:
+        assert c.get("/").status_code == 404

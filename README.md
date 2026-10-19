@@ -10,7 +10,18 @@ An imgupscaler.com-style web app: drop in one image or a whole batch, choose
 | API | FastAPI + Uvicorn, Pillow, in-process job queue with one worker |
 | Frontend | React + Vite + TypeScript + Tailwind CSS, react-dropzone |
 
-## Running locally
+## Quick start on Windows
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\setup.ps1              # once; add -RegisterClaudeDesktop for Claude Desktop
+powershell -ExecutionPolicy Bypass -File .\start.ps1 -Background  # API + web UI on http://localhost:8000
+powershell -ExecutionPolicy Bypass -File .\stop.ps1
+```
+
+AI agents should read [AGENTS.md](AGENTS.md), the full operating guide (setup,
+MCP tools, REST examples, limits, troubleshooting).
+
+## Running locally (manual / macOS / Linux)
 
 ### Backend
 
@@ -39,8 +50,8 @@ npm install
 npm run dev          # http://localhost:5173, proxies /api to localhost:8000
 ```
 
-For production, `npm run build` produces static files in `frontend/dist/`.
-Serve them from any static host and set `VITE_API_URL` at build time if the
+`npm run build` produces static files in `frontend/dist/`, which the backend
+serves at `http://localhost:8000/` when present. Alternatively serve them from any static host and set `VITE_API_URL` at build time if the
 API is on another origin (also add that origin to the backend's `CORS_ORIGINS`).
 
 ## Use from an AI agent (MCP)
@@ -50,9 +61,9 @@ agents such as Claude Code and Claude Desktop can upscale local files. It sends
 the images to the REST API and saves the results back to disk, so **the
 backend must be running** (`uvicorn app.main:app --port 8000`, see above).
 
-**Claude Code:** the repo ships a `.mcp.json`, so starting `claude` in the
-repo root offers the `image-upscaler` server (approve it once). To use it from
-any directory, register it globally:
+**Claude Code:** `setup.ps1` writes a `.mcp.json` with this machine's paths,
+so starting `claude` in the repo root offers the `image-upscaler` server
+(approve it once). To use it from any directory, register it globally:
 
 ```bash
 claude mcp add image-upscaler --scope user \
@@ -60,7 +71,7 @@ claude mcp add image-upscaler --scope user \
      /absolute/path/to/image-upscaler/backend/scripts/mcp_server.py
 ```
 
-**Claude Desktop:** add this to `claude_desktop_config.json`
+**Claude Desktop:** run `setup.ps1 -RegisterClaudeDesktop`, or add this to `claude_desktop_config.json`
 (Settings → Developer → Edit Config), then restart Claude Desktop.
 On Windows the Python path is `backend\\.venv\\Scripts\\python.exe`.
 

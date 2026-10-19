@@ -8,3 +8,8 @@ node_modules/
 frontend/dist/
 .DS_Store
 *.tsbuildinfo
+# Generated per machine by setup.ps1
+.mcp.json
+claude_desktop_config.snippet.json
+backend/server*.log
+backend/server.pid
